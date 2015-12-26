@@ -24,12 +24,20 @@
     //クライアントからイベント送信（イベント名は自由に設定できます）
     function sendMessage() {
         var msg = $("#message").val(); //取得
+        var msgImg = window.btoa(msg);
+        <!--
+        console.log("msgImg="+msgImg);
+        -->
         $("#message").val(""); //空白にする
         s.emit("C_to_S_message", {value:msg}); //サーバへ送信
     }
     
     function sendBroadcast() {
         var msg = $("#message").val(); //取得
+        var msgImg = window.btoa(msg);
+        <!--
+        console.log("msgImg="+msgImg);
+        -->
         $("#message").val(""); //空白にする
         s.emit("C_to_S_broadcast", {value:msg}); // サーバへ送信
     }
@@ -41,7 +49,7 @@
     }    
     </script>
 </head>
-<body>
+<body onload="bootstrap()">
     <ons-tabbar var="tabbar">
         <ons-tabbar-item
             icon="home"
@@ -57,6 +65,5 @@
             label="Settings"
             page="page3.html"></ons-tabbar-item>
     </ons-tabbar>
-
 </body>
 </html>
