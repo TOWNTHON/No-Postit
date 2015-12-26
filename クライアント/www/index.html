@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src *; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+    <script src="components/loader.js"></script>
+    <script src="js/socket.io.js"></script>
+    <link rel="stylesheet" href="components/loader.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript">
+    ons.bootstrap();
+
+    //  var s = io.connect(); //リモート
+    var s = io.connect('http://52.26.19.108:3000'); //ローカル
+
+    //サーバから受け取るイベント
+    s.on("connect", function () {});  // 接続時
+    s.on("disconnect", function (client) {});  // 切断時
+    s.on("S_to_C_message", function (data) {
+        addMessage(data.value);
+      });
+    
+    //クライアントからイベント送信（イベント名は自由に設定できます）
+    function sendMessage() {
+        var msg = $("#message").val(); //取得
+        $("#message").val(""); //空白にする
+        s.emit("C_to_S_message", {value:msg}); //サーバへ送信
+    }
+    
+    function sendBroadcast() {
+        var msg = $("#message").val(); //取得
+        $("#message").val(""); //空白にする
+        s.emit("C_to_S_broadcast", {value:msg}); // サーバへ送信
+    }
+    
+    //jqueryでメッセージを追加
+    function addMessage (value,color,size) {
+        var msg = value.replace( /[!@$%<>'"&|]/g, '' ); //タグ記号とかいくつか削除
+        $("#msg_list").prepend("<div class='msg'>" + msg + "</div>");
+    }    
+    </script>
+</head>
+<body>
+    <ons-tabbar var="tabbar">
+        <ons-tabbar-item
+            icon="home"
+            label="Home"
+            page="navigator.html"
+            active="true"></ons-tabbar-item>
+        <ons-tabbar-item
+            icon="comment"
+            label="Comments"
+            page="page2.html"></ons-tabbar-item>
+        <ons-tabbar-item
+            icon="gear"
+            label="Settings"
+            page="page3.html"></ons-tabbar-item>
+    </ons-tabbar>
+
+</body>
+</html>
