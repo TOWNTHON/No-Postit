@@ -24,29 +24,36 @@
     //クライアントからイベント送信（イベント名は自由に設定できます）
     function sendMessage() {
         var msg = $("#message").val(); //取得
+        var fileReader = new FileReader();
+        fileReader.readAsDataURL(file);
+        var data = {};
+        fileReader.onload = function(event) {
+            data.file = event.target.result;
+            s.emit("upload", data); //サーバへ送信
+        }
         var msgImg = window.btoa(msg);
-        <!--
-        console.log("msgImg="+msgImg);
-        -->
+        console.log("msgImg= "+msgImg);
         $("#message").val(""); //空白にする
-        s.emit("C_to_S_message", {value:msg}); //サーバへ送信
     }
     
     function sendBroadcast() {
         var msg = $("#message").val(); //取得
         var msgImg = window.btoa(msg);
-        <!--
-        console.log("msgImg="+msgImg);
-        -->
+        console.log("msgImg= "+msgImg);
         $("#message").val(""); //空白にする
         s.emit("C_to_S_broadcast", {value:msg}); // サーバへ送信
     }
     
-    //jqueryでメッセージを追加
-    function addMessage (value,color,size) {
-        var msg = value.replace( /[!@$%<>'"&|]/g, '' ); //タグ記号とかいくつか削除
-        $("#msg_list").prepend("<div class='msg'>" + msg + "</div>");
-    }    
+    //jqueryでメッセージを追加、付箋にメッセージを表示
+    function addMessage () {
+        var msg = $("#message").val(); //取得
+        var msg = msg.replace( /[!@$%<>'"&|]/g, '' ); //タグ記号とかいくつか削除
+        var txt = $("#postit-text").text();
+        $("#postit-text").text(txt.replace( /ここに書きます/g, msg));
+        console.log("記入した内容は「" + msg + "」です");
+        // $("#msg_list").prepend("<div class='msg'>" + msg + "</div>");
+        $("#message").val(""); 
+    }
     </script>
 </head>
 <body onload="bootstrap()">

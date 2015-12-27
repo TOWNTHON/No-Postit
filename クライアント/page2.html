@@ -1,9 +1,15 @@
 <ons-toolbar>
-    <div class="center">Page1</div>
+    <div class="center">Page2</div>
 </ons-toolbar>
 <div id="msg_list" style="height:300px; overflow:auto;"></div>
-  <form action="" method="post" onsubmit="return false;">
+<div id="postit">
+    <img src="img/postit_yellow.png" id="postit-img" width="235" height="204">
+    <div id="postit-text-box">
+        <p id="postit-text">ここに書きます</p>
+    </div>
+</div>
+<form action="" method="post" onsubmit="return false;">
     <input type="text" class="text" style="width:95%; padding:10px" id="message"/>
-    <input type="submit" class="button" style="padding:10px" onclick="sendMessage();" value="みんなに送信" />
-    <input type="submit" class="button" style="padding:10px" onclick="sendBroadcast();" value="自分以外に送信" />
- </form>
+    <input type="submit" class="button" style="padding:10px" onclick="addMessage();" value="みんなに送信" />
+    <input type="submit" class="button" style="padding:10px" onclick="addMessage();" value="自分以外に送信" />
+</form>
