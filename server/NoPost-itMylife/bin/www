@@ -91,8 +91,23 @@ function onListening() {
   debug('Listening on ' + bind);
 }
 
-io.sockets.on("connection", function (socket) {
+var chat =　io.sockets.on("connection", function (socket) {
 
+  socket.on("init", function (data){
+    //join(room)で部屋を作る
+        socket.setRoominfo = data.room;
+        socket.join(data.room); //roomIDごとに登録
+        socket.join(socket.id); //個別に識別するためにクライアント識別子であるsocketidを登録
+ 
+        console.log(data.room+" join");
+  });
+
+  socket.on('upload', function(data) { //Room内にメッセージ送信
+      if(data.room === undefined || data.romm == ""){
+        io.sockets.emit("S_to_C_img", {value:data.value});
+      }
+        chat.to(data.room).emit("S_to_C_img", {value:data.file});
+  });
   // メッセージ送信（送信者にも送られる）
   socket.on("C_to_S_message", function (data) {
     io.sockets.emit("S_to_C_message", {value:data.value});
@@ -107,9 +122,4 @@ io.sockets.on("connection", function (socket) {
   socket.on("disconnect", function () {
 //    io.sockets.emit("S_to_C_message", {value:"user disconnected"});
   });
-
-  //アップロード処理
-  socket.on('upload', function(data) {
-    io.sockets.emit("S_to_C_img", {value:data.file});
-  }); 
 });

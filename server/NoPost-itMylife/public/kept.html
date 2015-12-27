@@ -1,48 +1,80 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Np post-it</title>
-
+    <title>No post-it</title>
 </head>
-<style>
-html {
-    height: 100%;
-}
-
-body {
-    height: 100%;
-    margin: 0;
-}
-
-.fullheight {
-    height: 100%;
-    background: #F5F5DC;
-}
-</style>
-<body　>
-    <div class="fullheight">
-        <img src="img/kept.png" style = "width: 100% ; height : 100%"/>
+<body>
+  <div class="fullheight">
+    <div id="keep">
+      <span class="distant">
+      Keep
+      </span>
     </div>
-    <input type="file" id="fileInput"></input>
-    <!-- jQuery -->
-    <script src="js/jquery.js"></script>
-
-    <!-- Bootstrap Core JavaScript -->
-    <script src="js/socket.io.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-
-    <!-- socketio-->
-    <script type="text/javascript">
-
-  //  var s = io.connect(); //リモート
+    <div id="problem">
+      <span class="distant">
+      Problem
+      </span>
+    </div>
+    <div id="try">
+      <span class="distant">
+      Try
+      </span>
+    </div>
+  </div>
+  <audio id="sound-file" preload="auto">
+    <source src="js/get.mp3" type="audio/mp3">
+  </audio>
+  <input type="file" id="fileInput"></input>
+  
+  <!-- jQuery -->
+  <script src="js/jquery.js"></script>
+  <script src="js/socket.io.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css" />
+  <link href="css/lity.min.css" rel="stylesheet">
+  <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
+  <script src="js/lity.min.js"></script>
+  <script src="js/ncmb.min.js"></script>
+  <script>
+    //  var s = io.connect(); //リモート
     var s = io.connect('http://52.26.19.108:3000'); //ローカル
+    var ROOMID = "";
+    window.APP_KEY = "a282eb6cc34d9fffd80136d08544dadfd97d0394f6d18ef1fed17e76e76c6efa";
+    window.CLIENT_KEY = "b0f2400b8c3a049d4e891aeb298cc0850df0af0fc57d58027f510c217c42ea45";
+    var ncmb = new NCMB(APP_KEY, CLIENT_KEY);
 
     //サーバから受け取るイベント
-    s.on("connect", function () {});  // 接続時
+    s.on("connect", function () {
+      var data = location.search.substring(1, location.search.length);
+      //エスケープされた文字をアンエスケープする
+      ROOMID = unescape(data);
+      //部屋番号送信・初期表示
+      s.emit('init', {'room': ROOMID});
+      var postitDB = ncmb.DataStore("postit");
+      postitDB.equalTo("roomId", ROOMID)
+         .order("category",true)
+         .fetchAll()
+         .then(function(results){
+            console.log("Successfully retrieved " + results.length + " scores.");
+            for (var i = 0; i < results.length; i++) {
+              var object = results[i];
+              var id = object.get("imgId");
+              $('.fullheight').append('<img id='+ id + ' style="width: 80px; height: 110px; position: absolute; right: 50%;" data-lity/>');
+              $( "#" + id).attr("src",object.get("imgBase64"));
+              $( "#" + id).draggable();
+              $( "#" + id).animate({
+                    'bottom' : '55%'
+              },1000);
+            }
+          })
+         .catch(function(err){
+            console.log(err);
+          });
+
+    });
+
     s.on("disconnect", function (client) {});  // 切断時
     s.on("S_to_C_message", function (data) {
       addMessage(data.value);
@@ -59,59 +91,44 @@ body {
       }
       var id = "img-" + r;
       var img = data.value;
-      $('.fullheight').append('<img id='+ id + ' style="width: 80px; height: 110px; position: absolute; right: 50%; bottom: 50%;"/>');
+      $('.fullheight').append('<img id='+ id + ' style="width: 80px; height: 110px; position: absolute; right: 50%;" data-lity/>');
       $( "#" + id).attr("src",img);
       $( "#" + id).draggable();
+      $( "#" + id).animate({
+            'bottom' : '55%'
+      },1000);
+      //音を鳴らす
+      $( '#sound-file' ).get(0).play() ;
+      //DBに登録する
+      var postitDB = ncmb.DataStore("postit");
+      postitDB.equalTo("imgId", id).count().fetchAll().then(function(results){
+            if(results.length == 0){
+                postitDB_set = new postitDB();
+                postitDB_set.set("imgId", id)
+                            .set("roomId", ROOMID)
+                            .set("imgBase64", img)
+                            .set("category", "1");
+                postitDB_set.save();
+            }
+      })
+        .catch(function(err){
+            alert("データを取得できませんでした");
+      });
       window.localStorage.setItem(id, img);
     });
-
-    //クライアントからイベント送信（イベント名は自由に設定できます）
-    function sendMessage() {
-      var msg = $("#message").val(); //取得
-      $("#message").val(""); //空白にする
-      s.emit("C_to_S_message", {value:msg}); //サーバへ送信
-    }
-
-    function sendBroadcast() {
-      var msg = $("#message").val(); //取得
-      $("#message").val(""); //空白にする
-      s.emit("C_to_S_broadcast", {value:msg}); // サーバへ送信
-    }
-
-    //jqueryでメッセージを追加
-    function addMessage (value,color,size) {
-      var msg = value.replace( /[!@$%<>'"&|]/g, '' ); //タグ記号とかいくつか削除
-      $("#msg_list").prepend("<div class='msg'>" + msg + "</div>");
-    }    
-
-  </script>
-
-  <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.0/themes/base/jquery-ui.css" />
-  <script src="http://code.jquery.com/ui/1.10.0/jquery-ui.js"></script>
-  <style>
-  #draggable { width: 80px; height: 110px; padding: 0.5em; }
-  </style>
-  <script>
-  $(function() {
-    $( "#0001" ).draggable();
-  });
 
   function upload(file){
 
        var fileReader = new FileReader();
        var send_file = file;
-       var type = send_file.type;//♪L( ՞ਊ ՞)┘└( ՞ਊ ՞)」♪
        var data = {};
    
        fileReader.readAsDataURL(send_file);
    
        fileReader.onload = function(event) {
            data.file = event.target.result;
-           data.name = "uploadFile";
-           data.type = type;//♪L( ՞ਊ ՞)┘└( ՞ਊ ՞)」♪
-
+           data.room = ROOMID;
            s.emit('upload',data);
-   
        }
 
   }
@@ -125,11 +142,56 @@ body {
  
       });
 
-});
+    $( "#keep" ).droppable({
+      drop : function(event , ui){ // ドロップされた時に動きます
+                  console.log("ドロップされました");
+      }
+    });
 
-
+  });
   </script>
+  <style>
+    html {
+        height: 100%;
+    }
 
+    body {
+        height: 100%;
+        margin: 0;
+    }
+    #keep{
+        width: 33%;
+        height: 100%;
+        position: absolute;
+        background-color: #FFFACD;
+    }
+    #problem{
+        width: 33%;
+        height: 100%;
+        left:33%;
+        position: absolute;
+        background-color: #FF6347;
+    }
+    #try{
+        width: 33%;
+        height: 100%;
+        left : 66%;
+        position: absolute;
+        background-color: #B0E0E6;
+    }
+    .fullheight {
+        height: 100%;
+        background: #F5F5DC;
+    }
+    .distant {
+        font-size : 3em;   /* 48px */
+        line-height : 1;   /* 48px */
+        margin-bottom: 0.5em;   /* 24px */
+        color: rgba(0,0,0,0.6);
+        text-shadow: 2px 8px 6px rgba(0,0,0,0.2),
+                     0px -5px 16px rgba(255,255,255,0.3);
+    }
+    #draggable { width: 80px; height: 110px; padding: 0.5em; }
+  </style>
 </body>
-
 </html>
