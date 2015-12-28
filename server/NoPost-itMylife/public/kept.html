@@ -26,8 +26,10 @@
   <audio id="sound-file" preload="auto">
     <source src="js/get.mp3" type="audio/mp3">
   </audio>
-  <input type="file" id="fileInput"></input>
-  
+  <div id="inline" style="background:#fff" class="lity-hide">
+    <img src="" id="popupimg"/>
+  </div>
+
   <!-- jQuery -->
   <script src="js/jquery.js"></script>
   <script src="js/socket.io.js"></script>
@@ -61,11 +63,13 @@
             for (var i = 0; i < results.length; i++) {
               var object = results[i];
               var id = object.get("imgId");
-              $('.fullheight').append('<img id='+ id + ' style="width: 80px; height: 110px; position: absolute; right: 50%;" data-lity/>');
-              $( "#" + id).attr("src",object.get("imgBase64"));
+              var imgBase64 = object.get("imgBase64")
+              $('.fullheight').append('<img id='+ id + ' name= '+ id +' style="width: 120px; height: 120px; position: absolute; left: 50%; top: 100%;"/>');
+              $( "#" + id).attr("src",imgBase64);
               $( "#" + id).draggable();
               $( "#" + id).animate({
-                    'bottom' : '55%'
+                    'top'  : object.get("y"),
+                    'left' : object.get("x")
               },1000);
             }
           })
@@ -91,12 +95,28 @@
       }
       var id = "img-" + r;
       var img = data.value;
-      $('.fullheight').append('<img id='+ id + ' style="width: 80px; height: 110px; position: absolute; right: 50%;" data-lity/>');
+      var category = data.category;
+      $('.fullheight').append('<img id='+ id + ' style="width: 120px; height: 120px; position: absolute; left: 50%; top: 100%;" data-lity/>');
       $( "#" + id).attr("src",img);
       $( "#" + id).draggable();
-      $( "#" + id).animate({
-            'bottom' : '55%'
-      },1000);
+      if(category =="1"){
+        $( "#" + id).animate({
+          'top' : '50%',
+          'left'  : '10%'
+        },1000);
+      }
+      if(category =="2"){
+        $( "#" + id).animate({
+          'top' : '50%',
+          'left'  : '45%'
+        },1000);
+      }
+      if(category =="3"){
+        $( "#" + id).animate({
+          'top' : '50%',
+          'left'  : '75%'
+        },1000);
+      }
       //音を鳴らす
       $( '#sound-file' ).get(0).play() ;
       //DBに登録する
@@ -107,52 +127,132 @@
                 postitDB_set.set("imgId", id)
                             .set("roomId", ROOMID)
                             .set("imgBase64", img)
-                            .set("category", "1");
+                            .set("category", category);
                 postitDB_set.save();
             }
       })
         .catch(function(err){
             alert("データを取得できませんでした");
       });
-      window.localStorage.setItem(id, img);
     });
-
-  function upload(file){
-
-       var fileReader = new FileReader();
-       var send_file = file;
-       var data = {};
-   
-       fileReader.readAsDataURL(send_file);
-   
-       fileReader.onload = function(event) {
-           data.file = event.target.result;
-           data.room = ROOMID;
-           s.emit('upload',data);
-       }
-
-  }
 
   $(document).ready(function(){
 
-     $("#fileInput").change(function(event){
- 
-         var file = event.target.files[0];
-         upload(file);//ファイルを送る関数
- 
-      });
 
     $( "#keep" ).droppable({
       drop : function(event , ui){ // ドロップされた時に動きます
-                  console.log("ドロップされました");
+          // 要素のX座標
+          var x = ui.position.left;
+
+          // 要素のY座標
+          var y = ui.position.top;
+
+          //idの取得
+          var id = ui.draggable.context.id;
+
+          //XY座標をDBに格納
+          var postitDB = ncmb.DataStore("postit");
+          postitDB.equalTo("imgId", id).fetchAll().then(function(results){
+            for (var i = 0; i < results.length; i++) {
+              var object = results[i];
+              object.set("x" , x);
+              object.set("y" , y);
+              object.set("category" , "1");
+              return object.update();
+            }
+          })
+          .catch(function(err){
+            
+          });  
       }
     });
 
+    $( "#problem" ).droppable({
+      drop : function(event , ui){ // ドロップされた時に動きます
+          // 要素のX座標
+          var x = ui.position.left;
+
+          // 要素のY座標
+          var y = ui.position.top;
+
+          //idの取得
+          var id = ui.draggable.context.id;
+
+          //XY座標をDBに格納
+          var postitDB = ncmb.DataStore("postit");
+          postitDB.equalTo("imgId", id).fetchAll().then(function(results){
+            for (var i = 0; i < results.length; i++) {
+              var object = results[i];
+              object.set("x" , x);
+              object.set("y" , y);
+              object.set("category" , "2");
+              return object.update();
+            }
+          })
+          .catch(function(err){
+            
+          });  
+      }
+    });
+
+    $( "#try" ).droppable({
+      drop : function(event , ui){ // ドロップされた時に動きます
+          // 要素のX座標
+          var x = ui.position.left;
+
+          // 要素のY座標
+          var y = ui.position.top;
+
+          //idの取得
+          var id = ui.draggable.context.id;
+
+          //XY座標をDBに格納
+          var postitDB = ncmb.DataStore("postit");
+          postitDB.equalTo("imgId", id).fetchAll().then(function(results){
+            for (var i = 0; i < results.length; i++) {
+              var object = results[i];
+              object.set("x" , x);
+              object.set("y" , y);
+              object.set("category" , "3");
+              return object.update();
+            }
+          })
+          .catch(function(err){
+            
+          });  
+      }
+    });
+
+    $("img").click(function(){
+      var src = $(this.id).attr('src'); 
+      $( "#popupimg").attr("src",src);
+      var lightbox = lity();
+      lightbox('#inline');
+      $( "#" + id).on('click', '[data-lightbox]', lightbox);
+    })
+
   });
+
+  // function upload(file){
+
+  //      var fileReader = new FileReader();
+  //      var send_file = file;
+  //      var data = {};
+   
+  //      fileReader.readAsDataURL(send_file);
+   
+  //      fileReader.onload = function(event) {
+  //          data.file = event.target.result;
+  //          data.room = ROOMID;
+  //          s.emit('upload',data);
+  //      }
+
+  // }
   </script>
   <style>
     html {
         height: 100%;
+        overflow: hidden;
     }
 
     body {

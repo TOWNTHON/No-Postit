@@ -8,7 +8,6 @@ var app = require('../app');
 var debug = require('debug')('NoPost-itMylife:server');
 var http = require('http');
 var socketio = require("socket.io");
-
 /**
  * Get port from environment and store in Express.
  */
@@ -103,10 +102,11 @@ var chat =　io.sockets.on("connection", function (socket) {
   });
 
   socket.on('upload', function(data) { //Room内にメッセージ送信
+      console.log(data.category);
       if(data.room === undefined || data.romm == ""){
-        io.sockets.emit("S_to_C_img", {value:data.value});
+        io.sockets.emit("S_to_C_img", {value:data.file,category:data.category});
       }
-        chat.to(data.room).emit("S_to_C_img", {value:data.file});
+        chat.to(data.room).emit("S_to_C_img", {value:data.file,category:data.category});
   });
   // メッセージ送信（送信者にも送られる）
   socket.on("C_to_S_message", function (data) {
