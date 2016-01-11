@@ -6,6 +6,7 @@
     <meta http-equiv="Content-Security-Policy" content="default-src *; style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
     <script src="components/loader.js"></script>
     <script src="js/socket.io.js"></script>
+    <script src="js/html2canvas.js"></script>
     <link rel="stylesheet" href="components/loader.css">
     <link rel="stylesheet" href="css/style.css">
     <script type="text/javascript">
@@ -52,7 +53,20 @@
         $("#postit-text").text(txt.replace( /ここに書きます/g, msg));
         console.log("記入した内容は「" + msg + "」です");
         // $("#msg_list").prepend("<div class='msg'>" + msg + "</div>");
-        $("#message").val(""); 
+        $("#message").val("");
+    }
+    
+    function sample(){
+        console.log("button clicked!");
+        var canvas = document.querySelector("canvas");
+        html2canvas(document.getElementById("postit")).then(function(canvas) {
+             console.log('Drew on the existing canvas');
+             var data = {};
+             data.file = canvas.toDataURL('image/png');
+             
+             s.emit('upload', data);
+             console.log(data);
+        },false);
     }
     </script>
 </head>
